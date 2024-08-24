@@ -1,43 +1,29 @@
 import React from 'react';
-import { useCreateUserWithEmailAndPassword, useSignInWithGoogle, useUpdateProfile } from 'react-firebase-hooks/auth';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-// import auth from '../../../firebase.init';
-import auth from "../../src/firebase.init"
-// import Loading from '../Shared/Loading';
 
 const Signup = () => {
     const navigate = useNavigate()
     const location = useLocation()
-    const [signInWithGoogle, gUser, gLoading, gError] = useSignInWithGoogle(auth);
-    const [updateProfile, updating, dError] = useUpdateProfile(auth);
-    const [
-        createUserWithEmailAndPassword,
-        cUser,
-        loading,
-        error,
-    ] = useCreateUserWithEmailAndPassword(auth);
     const { register, formState: { errors }, handleSubmit } = useForm();
 
     const from = location.state?.from?.pathname || '/';
 
     const onSubmit = async data => {
-        await createUserWithEmailAndPassword(data.email, data.password);
-        await updateProfile({ displayName: data.name });
-        const email = data.email;
         const user = {
             name: data.name,
-            email: data.email
+            email: data.email,
+            password: data.password
         }
         fetch('http://localhost:4000/login', {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
             },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ user })
         })
-            .then(res => res.json())
-            .then(data => {
+        .then(res => res.json())
+        .then(data => {
                 if (data.token && user) {
                     fetch('http://localhost:4000/user', {
                         method: 'POST',
@@ -48,7 +34,7 @@ const Signup = () => {
                     })
                         .then(res => res.json())
                         .then(data => {
-                            if(data.acknowledged){
+                            if (data.acknowledged) {
                                 navigate(from, { replace: true });
                             }
                             window.location.reload()
@@ -58,48 +44,12 @@ const Signup = () => {
             });
     }
 
-    if (loading || gLoading || updating) {
-        // return <Loading></Loading>
-    }
-
     let signUpError;
-    if (error || gError || dError) {
-        signUpError = <p className='text-red-600'><small>{error?.message || gError?.message || dError?.message}</small></p>
+
+    if (errors) {
+        signUpError = <p className='text-red-600'><small>{errors?.message}</small></p>
     }
 
-    if (cUser || gUser) {
-        const email = gUser?.user?.email;
-        const user = {
-            name: gUser?.user?.displayName,
-            email: gUser?.user?.email
-        }
-        fetch('http://localhost:4000/login', {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify({ email })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.token) {
-                    fetch('http://localhost:4000/user', {
-                        method: 'PUT',
-                        headers: {
-                            'content-type': 'application/json'
-                        },
-                        body: JSON.stringify({ user })
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            if(data.acknowledged){
-                                navigate(from, { replace: true });
-                            }
-                        });
-                }
-                localStorage.setItem('accessToken', data.accessToken)
-            })
-    }
     return (
         <div className='flex mt-10 items-center justify-center'>
             <div className="card w-96 bg-base-100 shadow-xl">
@@ -181,7 +131,7 @@ const Signup = () => {
                     </form>
                     <p><small>Already Have an Account? <Link to='/login' className='text-success'>Please Login</Link></small></p>
                     <div className="divider">OR</div>
-                    <button onClick={() => signInWithGoogle()} className="btn btn-outline">Conitnue With Google</button>
+                    <button onClick="" className="btn btn-outline">Conitnue With Google</button>
                 </div>
             </div>
         </div>

@@ -1,88 +1,43 @@
 import React from 'react'
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import auth from '../firebase.init';
-import { useSignInWithEmailAndPassword, useSignInWithGoogle } from 'react-firebase-hooks/auth';
 
 export default function Login() {
     const navigate = useNavigate()
     const location = useLocation()
-    const [signInWithGoogle, gUser, gLoading, gError] = useSignInWithGoogle(auth);
     const { register, formState: { errors }, handleSubmit } = useForm();
-    const [signInWithEmailAndPassword,sUser,loading, error,] = useSignInWithEmailAndPassword(auth);
 
     const from = location.state?.from?.pathname || '/';
 
     const onSubmit = data => {
-        signInWithEmailAndPassword(data.email, data.password);
-        const email = data.email;
-        if(email){
-            fetch('http://localhost:4000/login',{
-            method: 'POST',
-            headers:{
-                'content-type':'application/json'
-            },
-            body: JSON.stringify({email})
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.token){
-                if(sUser){
-                    navigate(from, { replace: true });
-                }
-            }
-            localStorage.setItem('accessToken', data.accessToken)
-        })
+        const user = {
+            email: data.email,
+            pass: data.pass,
         }
-    }
+        fetch('http://localhost:4000/login', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({ user })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    navigate(from, { replace: true });
 
-    if(loading || gLoading){
-        // return <Loading></Loading>
+                }
+                localStorage.setItem('accessToken', data.accessToken)
+            })
+
     }
 
     let signInError;
 
-    if(error || gError){
-        signInError = <p className='text-red-600'><small>{error?.message || gError.message}</small></p>
+    if (errors) {
+        signInError = <p className='text-red-600'><small>{errors?.message}</small></p>
     }
 
-
-    if(sUser || gUser){
-        const email = gUser?.user?.email;
-        const user = {
-            name : gUser?.user?.displayName,
-            email : gUser?.user?.email
-        }
-       if(user){
-        fetch('http://localhost:4000/login',{
-            method: 'POST',
-            headers:{
-                'content-type':'application/json'
-            },
-            body: JSON.stringify({email})
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.token && user){
-                fetch('http://localhost:4000/user', {
-                        method: 'PUT',
-                        headers: {
-                            'content-type': 'application/json'
-                        },
-                        body: JSON.stringify({ user })
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            if(data.acknowledged){
-                                navigate(from, { replace: true });
-                            }
-                        });
-            }
-            localStorage.setItem('accessToken', data.accessToken)
-        })
-       }
-        
-    }
 
     return (
         <div className='flex mt-10 items-center justify-center'>
@@ -140,12 +95,12 @@ export default function Login() {
 
                             </label>
                         </div>
-                                {signInError}
+                        {signInError}
                         <input className='btn w-full max-w-xs text-white' type="submit" value='Login' />
                     </form>
                     <p><small>New to Lukas's Portal? <Link to='/signup' className='text-success'>Create New Account</Link></small></p>
                     <div className="divider">OR</div>
-                    <button onClick={() => signInWithGoogle()} className="btn btn-outline">Conitnue With Google</button>
+                    <button onClick="" className="btn btn-outline">Conitnue With Google</button>
                 </div>
             </div>
         </div>
